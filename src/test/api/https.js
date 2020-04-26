@@ -1,7 +1,7 @@
 const axios = require('axios');
-const API_CHAIN_ID = 2;
-axios.defaults.timeout = 8000;
-axios.defaults.baseURL = 'http://127.0.0.1:18004/api';
+const API_CHAIN_ID = 4;
+axios.defaults.timeout = 9000;
+axios.defaults.baseURL = 'http://seede.nuls.io:17003';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 /**
@@ -30,11 +30,11 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const params = {"jsonrpc": "2.0", "method": methodName, "params": data, "id": 5899};
       axios.post(url, params)
-          .then(response => {
-            resolve(response.data)
-          }, err => {
-            reject(err)
-          })
+        .then(response => {
+          resolve(response.data)
+        }, err => {
+          reject(err)
+        })
     })
   }
 };

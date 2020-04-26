@@ -1,15 +1,15 @@
 # Install
 ```bash
-$ npm i nuls-sdk-js
+$ npm i nerve-sdk-js
 ```
 
 # Usage
 ```js
 const nuls = require('./index');
 
-let chainId = 3; //链ID 1:NULS主网 2：NULS测试网 3以上其他链
+let chainId = 4; //链ID 3:NVT主网 4：TNVT测试网
 let passWord = "";
-let prefix = "semo"; //链前缀
+let prefix = "NVT"; //链前缀
 
 //创建地址
 const newAddress = nuls.newAddress(chainId, passWord, prefix);

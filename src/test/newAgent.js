@@ -1,5 +1,5 @@
 const nuls = require('../index');
-const {getNulsBalance, countFee, inputsOrOutputs, validateTx, broadcastTx} = require('./api/util');
+const {getNulsBalance, inputsOrOutputs, validateTx, broadcastTx} = require('./api/util');
 
 /**
  * @disc: 创建节点 dome
@@ -7,22 +7,22 @@ const {getNulsBalance, countFee, inputsOrOutputs, validateTx, broadcastTx} = req
  * @author: Wave
  */
 
-let pri = '411fa90f7161a20f4624a4f00167fac6d5afd97a7e6815f60e66106c559564a1';
-let pub = '031c810153d633a5167ec629af771296bad4f26eacfe4034c978afee12b6c4fd44';
-let fromAddress = "tNULSeBaMuBCG7NkSyufjE76CVbPQMrZ5Q1v3s";
+let pri = '33027cb348f51d0909021343c3374b23cf011cadab0f24c1718bf6a382ce7a30';
+let pub = '0243a092a010f668680238546f2b68b598bb8c606820f0d5051435adaff59e95b9';
+let fromAddress = "TNVTdN9i4JSE9C1PrZZzuQpvrzdhXakSw3UxY";
 let amount = 2000100000000;
 let remark = 'new agent...';
 
 let agent = {
   agentAddress: fromAddress,
-  packingAddress: "tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG",
+  packingAddress: "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA",
   rewardAddress: fromAddress,
-  commissionRate: 12,
+  commissionRate: 10,
   deposit: 2000100000000
 };
 
 //调用新建节点
-newAgent(pri, pub, fromAddress, 2, 1, amount, agent);
+newAgent(pri, pub, fromAddress, 4, 1, amount, agent);
 
 /**
  * 新建节点
@@ -45,8 +45,8 @@ async function newAgent(pri, pub, fromAddress, assetsChainId, assetsId, amount, 
     fee: 100000
   };
   let inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo, 4);
-  let tAssemble =  await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, remark, 4, agent);
-  let txhex = await nuls.transactionSerialize(pri, pub,tAssemble);
+  let tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, remark, 4, agent);
+  let txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
   //console.log(txhex);
   let result = await validateTx(txhex);
   if (result) {
