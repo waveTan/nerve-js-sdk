@@ -17,7 +17,6 @@ let agent = {
   agentAddress: fromAddress,
   packingAddress: "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA",
   rewardAddress: fromAddress,
-  commissionRate: 10,
   deposit: 2000100000000
 };
 
@@ -37,6 +36,7 @@ newAgent(pri, pub, fromAddress, 4, 1, amount, agent);
  */
 async function newAgent(pri, pub, fromAddress, assetsChainId, assetsId, amount, agent) {
   const balanceInfo = await getNulsBalance(fromAddress);
+  //console.log(balanceInfo);
   let transferInfo = {
     fromAddress: fromAddress,
     assetsChainId: assetsChainId,
@@ -45,10 +45,12 @@ async function newAgent(pri, pub, fromAddress, assetsChainId, assetsId, amount, 
     fee: 100000
   };
   let inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo, 4);
+  //console.log(inOrOutputs);
   let tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, remark, 4, agent);
   let txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
   //console.log(txhex);
   let result = await validateTx(txhex);
+  //console.log(result);
   if (result) {
     console.log(result.data.value);
     let results = await broadcastTx(txhex);

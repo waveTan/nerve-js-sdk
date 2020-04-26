@@ -7,14 +7,14 @@ const {getNulsBalance, countFee, inputsOrOutputs, validateTx, broadcastTx, agent
  * @author: Wave
  */
 
-let pri = '777e333556edb17564ea45f84dce0f5fbea884123924575213c7a30cb3c9375410';
-let pub = '027d8d404b0aaa834491999a0212ef7e432da69c6462857566f80a2c81e259e7b2';
-let fromAddress = "NULSd6HgfzPGhFsZX16hHgneY25YKs6v6LvmX";
+let pri = '33027cb348f51d0909021343c3374b23cf011cadab0f24c1718bf6a382ce7a30';
+let pub = '0243a092a010f668680238546f2b68b598bb8c606820f0d5051435adaff59e95b9';
+let fromAddress = "TNVTdN9i4JSE9C1PrZZzuQpvrzdhXakSw3UxY";
 let amount = 2000000000000;
 let remark = 'stop agent....';
 
 //调用注销节点
-stopAgent(pri, pub, fromAddress, 1, 1, amount, '7018c41307132d3e4709c3f50bae235e6f028a267b291930520bdb25f9d24195');
+stopAgent(pri, pub, fromAddress, 4, 1, amount, 'be355df0805a56d379af1537c11e0ae387c59ce7e8c787b4aead07a1c78b9f50');
 
 /**
  * 注销节点
@@ -29,7 +29,7 @@ stopAgent(pri, pub, fromAddress, 1, 1, amount, '7018c41307132d3e4709c3f50bae235e
  */
 async function stopAgent(pri, pub, fromAddress, assetsChainId, assetsId, amount, agentHash) {
   const balanceInfo = await getNulsBalance(fromAddress);
-  //console.log(balanceInfo);
+  console.log(balanceInfo);
   let transferInfo = {
     fromAddress: fromAddress,
     assetsChainId: assetsChainId,
@@ -114,9 +114,9 @@ async function stopAgent(pri, pub, fromAddress, assetsChainId, assetsId, amount,
   } else {
     txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
   }
-  //console.log(txhex);
+  console.log(txhex);
   let result = await validateTx(txhex);
-  //console.log(result);
+  console.log(result);
   if (result) {
     let results = await broadcastTx(txhex);
     //console.log(results);

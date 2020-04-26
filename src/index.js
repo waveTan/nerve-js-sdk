@@ -82,9 +82,9 @@ module.exports = {
       tt = new txs.AliasTransaction(info.fromAddress, info.alias);
     } else if (type === 4) { //创建节点
       tt = new txs.CreateAgentTransaction(info);
-    } else if (type === 5) { //加入共识
+    } else if (type === 5) { //加入节点
       tt = new txs.DepositTransaction(info);
-    } else if (type === 6) { //退出共识
+    } else if (type === 6) { //退出节点
       tt = new txs.WithdrawTransaction(info);
     } else if (type === 9) { //注销节点
       tt = new txs.StopAgentTransaction(info, outputs[0].lockTime - 86400 * 3);

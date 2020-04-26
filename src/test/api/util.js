@@ -256,7 +256,7 @@ module.exports = {
    * @param assetId
    * @returns {Promise<AxiosResponse<any>>}
    */
-  async getBalance(chainId, assetChainId = 2, assetId = 1, address) {
+  async getBalance(chainId, assetChainId = 4, assetId = 1, address) {
     return await http.postComplete('/', 'getAccountBalance', [chainId, assetChainId, assetId, address])
       .then((response) => {
         //console.log(response);
@@ -273,7 +273,7 @@ module.exports = {
    * @returns {Promise<AxiosResponse<any>>}
    */
   async getNulsBalance(address) {
-    return await http.post('/', 'getAccountBalance', [2, 1, address])
+    return await http.post('/', 'getAccountBalance', [4, 1, address])
       .then((response) => {
         return {'balance': response.result.balance, 'nonce': response.result.nonce};
       })

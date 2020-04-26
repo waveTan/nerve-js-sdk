@@ -176,6 +176,7 @@ let Transaction = function () {
 
 module.exports = {
   Transaction,
+
   /**
    * 转账交易
    * @constructor
@@ -208,7 +209,7 @@ module.exports = {
   CreateAgentTransaction: function (agent) {
     Transaction.call(this);
     //对象属性结构
-    if (!agent || !agent.agentAddress || !agent.packingAddress || !agent.rewardAddress || !agent.commissionRate || !agent.deposit) {
+    if (!agent || !agent.agentAddress || !agent.packingAddress || !agent.rewardAddress || !agent.deposit) {
       throw "Data wrong!";
     }
     this.type = 4;
@@ -217,7 +218,7 @@ module.exports = {
     bw.getBufWriter().write(sdk.getBytesAddress(agent.agentAddress));
     bw.getBufWriter().write(sdk.getBytesAddress(agent.packingAddress));
     bw.getBufWriter().write(sdk.getBytesAddress(agent.rewardAddress));
-    bw.getBufWriter().writeUInt8(agent.commissionRate);
+    //bw.getBufWriter().writeUInt8(agent.commissionRate);
     this.txData = bw.getBufWriter().toBuffer();
   },
 
@@ -227,6 +228,8 @@ module.exports = {
    * @constructor
    */
   DepositTransaction: function (entity) {
+    console.log("---------------");
+    console.log(entity);
     Transaction.call(this);
     //对象属性结构
     if (!entity || !entity.address || !entity.agentHash || !entity.deposit) {
@@ -237,6 +240,11 @@ module.exports = {
     bw.writeBigInt(entity.deposit);
     bw.getBufWriter().write(sdk.getBytesAddress(entity.address));
     bw.getBufWriter().write(Buffer.from(entity.agentHash, 'hex'));
+
+    bw.writeUInt64LE(entity.assetsChainId);
+    bw.writeUInt64LE(entity.assetsId);
+    bw.writeUInt64LE(entity.depositType);
+
     this.txData = bw.getBufWriter().toBuffer();
 
   },
@@ -269,6 +277,7 @@ module.exports = {
     this.type = 6;
     this.txData = Buffer.from(depositTxHash, 'hex');
   },
+
   RegisterChainAndAssetTransaction: function (txDataInfo) {
     Transaction.call(this);
     if (!txDataInfo.address || !txDataInfo.chainInfo || !txDataInfo.chainInfo.chainId || !txDataInfo.chainInfo.chainName || !txDataInfo.chainInfo.addressType ||
@@ -326,6 +335,7 @@ module.exports = {
 
     this.txData = bw.getBufWriter().toBuffer();
   },
+
   /**
    * 创建合约交易
    * @param contractCreate
