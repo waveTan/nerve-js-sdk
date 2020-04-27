@@ -9,7 +9,7 @@ const nuls = require('./index');
 
 let chainId = 4; //链ID 3:NVT主网 4：TNVT测试网
 let passWord = "";
-let prefix = "NVT"; //链前缀
+let prefix = "TNVT"; //链前缀
 
 //创建地址
 const newAddress = nuls.newAddress(chainId, passWord, prefix);
