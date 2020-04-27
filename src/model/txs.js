@@ -62,8 +62,28 @@ let typeMap = {
   24: "验证人变更",
   25: "验证人初始化",
   26: "合约转账",
-  27: "链内资产注册"
+  27: "资产注册登记",
+  28: "追加保证金",
+  29: "撤销保证金",
+  30: "喂价",
+  31: "最终交易",
+  228: "创建交易对",
+  229: "挂单委托",
+  230: "挂单撤销",
+  231: "挂单成交",
+  232: "修改交易对",
+  40: "确认虚拟银行变更",
+  41: "虚拟银行变更",
+  42: "链内充值",
+  43: "提现",
+  44: "确认提现成功",
+  45: "发起提案",
+  46: "提案投票",
+  47: "异构链交易手续费补贴",
+  48: "异构链合约资产注册",
+  49: "虚拟银行初始化异构链",
 };
+
 /**
  * 所有交易的基础类
  * @constructor
@@ -88,18 +108,8 @@ let Transaction = function () {
   };
 
   this.printInfo = function () {
-
-    console.log("  {");
-    console.log("      type : " + this.type + "(" + typeMap[this.type] + "),");
-    console.log("      time : " + this.time + "(" + new Date(this.time * 1000).toLocaleString() + ")");
-    console.log("    remark : " + this.remark.toString());
-    console.log("    txData : " + this.getTxDataStr());
-
     let signatures = new TxSignatures(new BufferReader(this.signatures, 0));
-    console.log("signatures :" + signatures.getPrintInfo());
     let coinData = new CoinData(new BufferReader(this.coinData, 0));
-    console.log("  coinData : " + coinData.getPrintInfo());
-    console.log(" }");
   };
   this.getTxDataStr = function () {
     if (!this.txData || 0 === this.txData.length) {
@@ -223,30 +233,45 @@ module.exports = {
   },
 
   /**
-   * 委托节点交易
+   * 追加委托节点交易
    * @param entity
    * @constructor
    */
   DepositTransaction: function (entity) {
-    console.log("---------------");
-    console.log(entity);
+    Transaction.call(this);
+    //对象属性结构
+    if (!entity || !entity.address || !entity.agentHash || !entity.amount) {
+      throw "Data Wrong!";
+    }
+    this.type = 28;
+    let bw = new Serializers();
+    bw.getBufWriter().write(sdk.getBytesAddress(entity.address));
+    bw.writeBigInt(entity.amount);
+    bw.getBufWriter().write(Buffer.from(entity.agentHash, 'hex'));
+    this.txData = bw.getBufWriter().toBuffer();
+  },
+
+  /**
+   * 添加staking交易
+   * @param entity
+   * @constructor
+   */
+  addStakingTransaction: function (entity) {
     Transaction.call(this);
     //对象属性结构
     if (!entity || !entity.address || !entity.agentHash || !entity.deposit) {
       throw "Data Wrong!";
     }
-    this.type = 5;
+    this.type = 28; //todo 类型待确定
     let bw = new Serializers();
-    bw.writeBigInt(entity.deposit);
     bw.getBufWriter().write(sdk.getBytesAddress(entity.address));
-    bw.getBufWriter().write(Buffer.from(entity.agentHash, 'hex'));
-
-    bw.writeUInt64LE(entity.assetsChainId);
-    bw.writeUInt64LE(entity.assetsId);
-    bw.writeUInt64LE(entity.depositType);
+    bw.writeBigInt(entity.deposit);
+    bw.getBufWriter().writeUInt16LE(entity.assetsChainId);
+    bw.getBufWriter().writeUInt16LE(entity.assetsId);
+    bw.getBufWriter().write(Buffer.from([entity.depositType]));
+    bw.getBufWriter().write(Buffer.from([entity.timeType]));
 
     this.txData = bw.getBufWriter().toBuffer();
-
   },
 
   /**
@@ -264,225 +289,5 @@ module.exports = {
     this.txData = Buffer.from(agentHash, 'hex');
   },
 
-  /**
-   * 撤回交易
-   * @param depositTxHash
-   * @constructor
-   */
-  WithdrawTransaction: function (depositTxHash) {
-    Transaction.call(this);
-    if (!depositTxHash) {
-      throw "Data wrong!";
-    }
-    this.type = 6;
-    this.txData = Buffer.from(depositTxHash, 'hex');
-  },
-
-  RegisterChainAndAssetTransaction: function (txDataInfo) {
-    Transaction.call(this);
-    if (!txDataInfo.address || !txDataInfo.chainInfo || !txDataInfo.chainInfo.chainId || !txDataInfo.chainInfo.chainName || !txDataInfo.chainInfo.addressType ||
-      !txDataInfo.chainInfo.magicNumber || !txDataInfo.chainInfo.addressPrefix || !txDataInfo.chainInfo.supportInflowAsset || !txDataInfo.chainInfo.minAvailableNodeNum
-      || !txDataInfo.chainInfo.verifierList || txDataInfo.chainInfo.verifierList.length < 1 || !txDataInfo.chainInfo.signatureBFTRatio || txDataInfo.chainInfo.signatureBFTRatio < 66 || txDataInfo.chainInfo.signatureBFTRatio > 100
-      || !txDataInfo.chainInfo.maxSignatureCount || !txDataInfo.assetInfo.assetId || !txDataInfo.assetInfo.symbol || txDataInfo.assetInfo.symbol.length > 8
-    ) {
-      throw "Params wrong!";
-    }
-    this.type = 11;
-    let bw = new Serializers();
-
-    // stream.writeString(name);
-    bw.writeString(txDataInfo.chainInfo.chainName);
-    // stream.writeString(addressType);
-    bw.writeString(txDataInfo.chainInfo.addressType);
-    // stream.writeString(addressPrefix);
-    bw.writeString(txDataInfo.chainInfo.addressPrefix);
-    // stream.writeUint32(magicNumber);
-    bw.getBufWriter().writeUInt32LE(txDataInfo.chainInfo.magicNumber);
-    // stream.writeBoolean(supportInflowAsset);
-    bw.writeBoolean(txDataInfo.chainInfo.supportInflowAsset);
-    // stream.writeUint32(minAvailableNodeNum);
-    bw.getBufWriter().writeUInt32LE(txDataInfo.chainInfo.minAvailableNodeNum);
-    // stream.writeUint16(verifierList.size());
-    bw.getBufWriter().writeUInt16LE(txDataInfo.chainInfo.verifierList.length);
-    // for (String verifier : verifierList) {
-    //     stream.writeString(verifier);
-    // }
-    for (let i = 0; i < txDataInfo.chainInfo.verifierList.length; i++) {
-      bw.writeString(txDataInfo.chainInfo.verifierList[i]);
-    }
-    // stream.writeUint16(signatureByzantineRatio);
-    bw.getBufWriter().writeUInt16LE(txDataInfo.chainInfo.signatureBFTRatio);
-    // stream.writeUint16(maxSignatureCount);
-    bw.getBufWriter().writeUInt16LE(txDataInfo.chainInfo.maxSignatureCount);
-    // stream.writeUint16(chainId);
-    bw.getBufWriter().writeUInt16LE(txDataInfo.chainInfo.chainId);
-    // stream.writeUint16(assetId);
-    bw.getBufWriter().writeUInt16LE(txDataInfo.assetInfo.assetId);
-    // stream.writeString(symbol);
-    bw.writeString(txDataInfo.assetInfo.symbol);
-    // stream.writeString(name);
-    bw.writeString(txDataInfo.assetInfo.assetName);
-    // stream.writeBigInteger(depositNuls);
-    bw.writeBigInt(80000000000);
-    // stream.writeBigInteger(destroyNuls);
-    bw.writeBigInt(60000000000);
-    // stream.writeBigInteger(initNumber);
-    bw.writeBigInt(txDataInfo.assetInfo.initNumber);
-    // stream.writeShort(decimalPlaces);
-    bw.getBufWriter().writeUInt16LE(txDataInfo.assetInfo.decimalPlaces);
-    // stream.writeBytesWithLength(address);
-    bw.writeBytesWithLength(sdk.getBytesAddress(txDataInfo.address));
-
-    this.txData = bw.getBufWriter().toBuffer();
-  },
-
-  /**
-   * 创建合约交易
-   * @param contractCreate
-   * @constructor
-   */
-  CreateContractTransaction: function (contractCreate) {
-    Transaction.call(this);
-    if (!contractCreate.chainId || !contractCreate.sender || !contractCreate.contractAddress ||
-      !contractCreate.contractCode || !contractCreate.alias || !contractCreate.gasLimit || !contractCreate.price) {
-      throw "Data wrong!";
-    }
-
-    this.type = 15;
-    let bw = new Serializers();
-    bw.getBufWriter().write(sdk.getBytesAddress(contractCreate.sender));
-    bw.getBufWriter().write(sdk.getBytesAddress(contractCreate.contractAddress));
-    bw.writeBytesWithLength(Buffer.from(contractCreate.contractCode, 'hex'));
-    bw.writeString(contractCreate.alias);
-    bw.writeUInt64LE(contractCreate.gasLimit);
-    bw.writeUInt64LE(contractCreate.price);
-    let args = contractCreate.args;
-    if (args != null) {
-      bw.getBufWriter().writeUInt8(args.length);
-      let innerArgs;
-      for (let j = 0; j < args.length; j++) {
-        innerArgs = args[j];
-        if (innerArgs == null) {
-          bw.getBufWriter().writeUInt8(0);
-        } else {
-          bw.getBufWriter().writeUInt8(innerArgs.length);
-          for (let k = 0; k < innerArgs.length; k++) {
-            bw.writeString(innerArgs[k]);
-          }
-        }
-      }
-    } else {
-      bw.getBufWriter().writeUInt8(0);
-    }
-    this.txData = bw.getBufWriter().toBuffer();
-  },
-
-  /**
-   * 调用合约交易
-   * @param contractCall
-   * @constructor
-   */
-  CallContractTransaction: function (contractCall) {
-    Transaction.call(this);
-    if (!contractCall.chainId || !contractCall.sender || !contractCall.contractAddress || !contractCall.gasLimit || !contractCall.price ||
-      !contractCall.methodName) {
-      throw "Data wrong!";
-    }
-
-    this.type = 16;
-    let bw = new Serializers();
-    bw.getBufWriter().write(sdk.getBytesAddress(contractCall.sender));
-    bw.getBufWriter().write(sdk.getBytesAddress(contractCall.contractAddress));
-    bw.writeBigInt(contractCall.value);
-    bw.writeUInt64LE(contractCall.gasLimit);
-    bw.writeUInt64LE(contractCall.price);
-    bw.writeString(contractCall.methodName);
-    bw.writeString(contractCall.methodDesc);
-    let args = contractCall.args;
-    if (args != null) {
-      bw.getBufWriter().writeUInt8(args.length);
-      let innerArgs;
-      for (let j = 0; j < args.length; j++) {
-        innerArgs = args[j];
-        if (innerArgs == null) {
-          bw.getBufWriter().writeUInt8(0);
-        } else {
-          bw.getBufWriter().writeUInt8(innerArgs.length);
-          for (let k = 0; k < innerArgs.length; k++) {
-            bw.writeString(innerArgs[k]);
-          }
-        }
-      }
-    } else {
-      bw.getBufWriter().writeUInt8(0);
-    }
-
-
-    this.txData = bw.getBufWriter().toBuffer();
-  },
-
-  /**
-   * 删除合约交易
-   * @param contractDelete
-   * @constructor
-   */
-  DeleteContractTransaction: function (contractDelete) {
-    Transaction.call(this);
-    if (!contractDelete.chainId || !contractDelete.sender || !contractDelete.contractAddress) {
-      throw "Data wrong!";
-    }
-    this.type = 17;
-    let bw = new Serializers();
-    bw.getBufWriter().write(sdk.getBytesAddress(contractDelete.sender));
-    bw.getBufWriter().write(sdk.getBytesAddress(contractDelete.contractAddress));
-    this.txData = bw.getBufWriter().toBuffer();
-  },
-
-  /**
-   * 跨链交易
-   * @constructor
-   */
-  CrossChainTransaction: function () {
-    Transaction.call(this);
-    this.type = 10;
-  },
-
-  CoinTradingTransaction: function (coinTrading) {
-    Transaction.call(this);
-    this.type = 228;
-    let bw = new Serializers();
-    bw.getBufWriter().writeUInt16LE(coinTrading.baseAssetChainId);
-    bw.getBufWriter().writeUInt16LE(coinTrading.baseAssetId);
-    bw.getBufWriter().writeUInt8(coinTrading.baseMinDecimal);
-    bw.writeBigInt(coinTrading.baseMinSize);
-
-    bw.getBufWriter().writeUInt16LE(coinTrading.quoteAssetChainId);
-    bw.getBufWriter().writeUInt16LE(coinTrading.quoteAssetId);
-    bw.getBufWriter().writeUInt8(coinTrading.quoteMinDecimal);
-    bw.writeBigInt(coinTrading.quoteMinSize);
-
-    this.txData = bw.getBufWriter().toBuffer();
-  },
-
-  TradingOrderTransaction: function (tradingOrder) {
-    Transaction.call(this);
-    this.type = 229;
-    let bw = new Serializers();
-    let hash = Buffer.from(tradingOrder.tradingHash, 'hex');
-    bw.getBufWriter().write(hash);
-    bw.getBufWriter().writeUInt8(tradingOrder.orderType);
-    bw.writeBigInt(tradingOrder.amount);
-    bw.writeBigInt(tradingOrder.price);
-    this.txData = bw.getBufWriter().toBuffer();
-  },
-
-  CancelTradingOrderTransaction: function (tradingOrder) {
-    Transaction.call(this);
-    this.type = 230;
-    let bw = new Serializers();
-    let hash = Buffer.from(tradingOrder.orderHash, 'hex');
-    bw.getBufWriter().write(hash);
-    this.txData = bw.getBufWriter().toBuffer();
-  },
 };
 

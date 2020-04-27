@@ -1,7 +1,7 @@
 const axios = require('axios');
 const API_CHAIN_ID = 4;
 axios.defaults.timeout = 9000;
-axios.defaults.baseURL = 'http://seede.nuls.io:17003';
+axios.defaults.baseURL = 'http://192.168.1.141:17003';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 /**

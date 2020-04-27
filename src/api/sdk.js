@@ -90,6 +90,7 @@ module.exports = {
         }
       }
     }
+    //console.log(stringAddress);
     let bytes = bs58.decode(stringAddress);
     return bytes.slice(0, bytes.length - 1);
   },

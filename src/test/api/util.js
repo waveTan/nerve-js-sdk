@@ -89,7 +89,7 @@ module.exports = {
     }
     if (type === 4) {
       newLockTime = -1;
-    } else if (type === 5) {
+    } else if (type === 28) {
       newLockTime = -1;
     } else if (type === 6) {
       newAmount = transferInfo.amount;

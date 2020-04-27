@@ -82,28 +82,8 @@ module.exports = {
       tt = new txs.AliasTransaction(info.fromAddress, info.alias);
     } else if (type === 4) { //创建节点
       tt = new txs.CreateAgentTransaction(info);
-    } else if (type === 5) { //加入节点
+    } else if (type === 28) { //追加保证金
       tt = new txs.DepositTransaction(info);
-    } else if (type === 6) { //退出节点
-      tt = new txs.WithdrawTransaction(info);
-    } else if (type === 9) { //注销节点
-      tt = new txs.StopAgentTransaction(info, outputs[0].lockTime - 86400 * 3);
-    } else if (type === 11) { //注册跨链交易
-      tt = new txs.RegisterChainAndAssetTransaction(info);
-    } else if (type === 15) { //创建合约
-      tt = new txs.CreateContractTransaction(info);
-    } else if (type === 16) { //调用合约
-      tt = new txs.CallContractTransaction(info);
-    } else if (type === 17) { //删除合约
-      tt = new txs.DeleteContractTransaction(info);
-    } else if (type === 10) { //跨链转账
-      tt = new txs.CrossChainTransaction();
-    } else if (type === 228) {  //创建交易对
-      tt = new txs.CoinTradingTransaction(info);
-    } else if (type === 229) {  //委托挂单
-      tt = new txs.TradingOrderTransaction(info);
-    } else if (type === 230) {   //取消委托挂单
-      tt = new txs.CancelTradingOrderTransaction(info);
     }
     tt.setCoinData(inputs, outputs);
     tt.remark = remark;
