@@ -37,7 +37,7 @@
     "watchify": "^3.11.0"
   },
   "dependencies": {
-    "acorn": "7.1.1",
+    "acorn": "6.4.1",
     "axios": "^0.18.1",
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
