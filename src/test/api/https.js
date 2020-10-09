@@ -1,7 +1,7 @@
 const axios = require('axios');
-const API_CHAIN_ID = 4;
+const API_CHAIN_ID = 5;
 axios.defaults.timeout = 9000;
-axios.defaults.baseURL = 'http://192.168.1.141:17003';
+axios.defaults.baseURL = 'http://beta.public.nerve.network';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 /**
@@ -16,7 +16,7 @@ module.exports = {
   post(url, methodName, data = []) {
     return new Promise((resolve, reject) => {
       data.unshift(API_CHAIN_ID);
-      const params = {"jsonrpc": "2.0", "method": methodName, "params": data, "id": 5898};
+      const params = {"jsonrpc": "2.0", "method": methodName, "params": data, "id": Math.floor(Math.random() * 1000)};
       axios.post(url, params)
         .then(response => {
           resolve(response.data)
@@ -28,7 +28,7 @@ module.exports = {
 
   postComplete(url, methodName, data = []) {
     return new Promise((resolve, reject) => {
-      const params = {"jsonrpc": "2.0", "method": methodName, "params": data, "id": 5899};
+      const params = {"jsonrpc": "2.0", "method": methodName, "params": data, "id": Math.floor(Math.random() * 1000)};
       axios.post(url, params)
         .then(response => {
           resolve(response.data)

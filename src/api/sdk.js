@@ -10,7 +10,7 @@ const iv = CryptoJS.enc.Hex.parse('0000000000000000');
 const bufferUtils = require("../utils/buffer");
 const Hash = require("../utils/hash");
 const Serializers = require("./serializers");
-const secp256k1 = require("secp256k1");
+const secp256k1 = require("secp256k1")
 
 /**
  * 将数字转为6个字节的字节数组
@@ -65,8 +65,13 @@ module.exports = {
    */
   getPub: function (randombytes) {
     let privateKey = Buffer.from(randombytes, 'hex');
+    let val = BigInteger.fromBuffer(privateKey);
+
+    if (val.compareTo(BigInteger.valueOf(1)) <= 0) {
+      throw "private key is wrong!";
+    }
     let ecparams = ecurve.getCurveByName('secp256k1');
-    let curvePt = ecparams.G.multiply(BigInteger.fromBuffer(privateKey));
+    let curvePt = ecparams.G.multiply(val);
     let publicKey = curvePt.getEncoded(true);
     return publicKey.toString('hex');
   },
@@ -90,7 +95,6 @@ module.exports = {
         }
       }
     }
-    //console.log(stringAddress);
     let bytes = bs58.decode(stringAddress);
     return bytes.slice(0, bytes.length - 1);
   },
@@ -99,7 +103,7 @@ module.exports = {
    * @param stringAddress
    */
   getStringAddressByBytes: function (bytes) {
-    let chainId = (bytes[0] & 0xff) |
+    var chainId = (bytes[0] & 0xff) |
       ((bytes[1] & 0xff) << 8);
     let tempBuffer = Buffer.allocUnsafe(bytes.length + 1);
     let xor = 0x00;
@@ -199,7 +203,13 @@ module.exports = {
     if (!pub) {
       pub = this.getPub(pri)
     }
+
     let pubBuffer = Buffer.from(pub, 'hex');
+    let val = BigInteger.fromBuffer(pubBuffer);
+    if (val.compareTo(BigInteger.valueOf(1)) <= 0) {
+      throw "public key is wrong!";
+    }
+
     let sha = cryptos.createHash('sha256').update(pubBuffer).digest();
     let pubkeyHash = cryptos.createHash('ripemd160').update(sha).digest();
     let chainIdBuffer = Buffer.concat([Buffer.from([0xFF & chainId >> 0]), Buffer.from([0xFF & chainId >> 8])]);
@@ -234,7 +244,7 @@ module.exports = {
     }
     let bytesV1 = bs58.decode(addressV1);
     let pubkeyHash = Buffer.alloc(20);
-    bytesV1.copy(pubkeyHash, 0, 3, 23);
+    bytesV1.copy(pubkeyHash, 0, 3, 23)
     let chainIdBuffer = Buffer.concat([Buffer.from([0xFF & chainId >> 0]), Buffer.from([0xFF & chainId >> 8])]);
     let addrBuffer = Buffer.concat([chainIdBuffer, Buffer.from([1]), pubkeyHash]);
     let xor = 0x00;

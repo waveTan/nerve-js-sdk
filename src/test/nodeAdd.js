@@ -2,28 +2,33 @@ const nuls = require('../index');
 const {getNulsBalance, inputsOrOutputs, validateTx, broadcastTx} = require('./api/util');
 
 /**
- * @disc: 加入共识dome
+ * @disc: 追加保证金
  * @date: 2019-10-18 10:34
  * @author: Wave
  */
 
-let pri = '33027cb348f51d0909021343c3374b23cf011cadab0f24c1718bf6a382ce7a30';
-let pub = '0243a092a010f668680238546f2b68b598bb8c606820f0d5051435adaff59e95b9';
-let fromAddress = "TNVTdN9i4JSE9C1PrZZzuQpvrzdhXakSw3UxY";
+let pri = '10d8804991ceaafa5d19dfa30d79c5091767a48da8e66b73494f0b6af8554618';
+let pub = '024bafc4a364659db1674d888bd3e0e7ab11cc4ca02dca95d548637c6b66d63f42';
+let fromAddress = "TNVTdN9iJcMNiTttfV4Wdi6wUp3k8NteoebYo";
 let amount = 200000000000;
 let remark = 'additional margin ....';
 
 let deposit = {
   address: fromAddress,
-  agentHash: '0ecfd212aa490b3f060e2e06f23bef798696b0ca4b04826d35381e63bf113883',
+  agentHash: '8e4310bbdb846abbb2ebe01f85f649927d43bd0183739bde2512ae6fb27b5ef5',
   amount: amount,
 };
-//调用加入共识
+//调用追加保证金
 addNode(pri, pub, fromAddress, 4, 1, amount, deposit);
 
 async function addNode(pri, pub, fromAddress, assetsChainId, assetsId, amount, deposit) {
   const balanceInfo = await getNulsBalance(fromAddress);
   //console.log(balanceInfo);
+  if (!balanceInfo.success) {
+    console.log("获取账户balanceInfo错误");
+    return;
+  }
+
   let transferInfo = {
     fromAddress: fromAddress,
     assetsChainId: assetsChainId,
@@ -31,13 +36,23 @@ async function addNode(pri, pub, fromAddress, assetsChainId, assetsId, amount, d
     amount: amount,
     fee: 100000
   };
-  let inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo, 28);
+  let newAmount = transferInfo.amount + transferInfo.fee;
+  if (balanceInfo.data.balance < newAmount) {
+    console.log("余额不住，请更换账户");
+    return;
+  }
+
+  let inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo.data, 28);
+  if (!inOrOutputs.success) {
+    console.log("inputOutputs组装失败!");
+    return;
+  }
   let tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, remark, 28, deposit);
   //console.log(tAssemble);
   let txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
-  console.log(txhex);
+  //console.log(txhex);
   let result = await validateTx(txhex);
-  console.log(result);
+  //console.log(result);
   if (result.success) {
     console.log(result.data.value);
     let results = await broadcastTx(txhex);

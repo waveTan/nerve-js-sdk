@@ -197,6 +197,15 @@ module.exports = {
   },
 
   /**
+   * 跨链交易
+   * @constructor
+   */
+  CrossChainTransaction: function () {
+    Transaction.call(this);
+    this.type = 10;
+  },
+
+  /**
    * 设置别名交易
    * @param address
    * @param alias
@@ -233,7 +242,68 @@ module.exports = {
   },
 
   /**
-   * 追加委托节点交易
+   * 加入staking
+   * @param entity
+   * @constructor
+   */
+  addStakingTransaction: function (entity) {
+    //console.log(entity);
+    Transaction.call(this);
+    //对象属性结构
+    if (!entity || !entity.deposit || !entity.address || !entity.assetsChainId || !entity.assetsId) {
+      throw "Data Wrong!";
+    }
+    this.type = 5;
+    let bw = new Serializers();
+    bw.writeBigInt(entity.deposit);
+    bw.getBufWriter().write(sdk.getBytesAddress(entity.address));
+    bw.getBufWriter().writeUInt16LE(entity.assetsChainId);
+    bw.getBufWriter().writeUInt16LE(entity.assetsId);
+    bw.getBufWriter().write(Buffer.from([entity.depositType]));
+    bw.getBufWriter().write(Buffer.from([entity.timeType]));
+    this.txData = bw.getBufWriter().toBuffer();
+  },
+
+  /**
+   * 退出staking
+   * @param entity
+   * @constructor
+   */
+  outStakingTransaction: function (entity) {
+    //console.log(entity);
+    Transaction.call(this);
+    //对象属性结构
+    if (!entity || !entity.address || !entity.agentHash) {
+      throw "Data Wrong!";
+    }
+    this.type = 6;
+    let bw = new Serializers();
+    bw.writeBytesWithLength(sdk.getBytesAddress(entity.address));
+    bw.getBufWriter().write(Buffer.from(entity.agentHash, 'hex'));
+    this.txData = bw.getBufWriter().toBuffer();
+  },
+
+  /**
+   * 注销节点
+   * @param entity
+   * @constructor
+   */
+  StopAgentTransaction: function (entity, lockTime) {
+    Transaction.call(this);
+    if (!entity || !entity.address || !entity.agentHash) {
+      throw "Data wrong!";
+    }
+    this.type = 9;
+    this.time = lockTime;
+
+    let bw = new Serializers();
+    bw.writeBytesWithLength(sdk.getBytesAddress(entity.address));
+    bw.getBufWriter().write(Buffer.from(entity.agentHash, 'hex'));
+    this.txData = bw.getBufWriter().toBuffer();
+  },
+
+  /**
+   * 追加保证金
    * @param entity
    * @constructor
    */
@@ -252,41 +322,84 @@ module.exports = {
   },
 
   /**
-   * 添加staking交易
+   * 退出保证金
    * @param entity
    * @constructor
    */
-  addStakingTransaction: function (entity) {
+  WithdrawTransaction: function (entity) {
+    //console.log(entity);
     Transaction.call(this);
     //对象属性结构
-    if (!entity || !entity.address || !entity.agentHash || !entity.deposit) {
+    if (!entity || !entity.address || !entity.agentHash || !entity.amount) {
       throw "Data Wrong!";
     }
-    this.type = 28; //todo 类型待确定
+    this.type = 29;
     let bw = new Serializers();
     bw.getBufWriter().write(sdk.getBytesAddress(entity.address));
-    bw.writeBigInt(entity.deposit);
-    bw.getBufWriter().writeUInt16LE(entity.assetsChainId);
-    bw.getBufWriter().writeUInt16LE(entity.assetsId);
-    bw.getBufWriter().write(Buffer.from([entity.depositType]));
-    bw.getBufWriter().write(Buffer.from([entity.timeType]));
+    bw.writeBigInt(entity.amount);
+    bw.getBufWriter().write(Buffer.from(entity.agentHash, 'hex'));
+    this.txData = bw.getBufWriter().toBuffer();
+  },
 
+  WithdrawalTransaction: function (entity) {
+    Transaction.call(this);
+    //对象属性结构
+    if (!entity || !entity.heterogeneousAddress) {
+      throw "Data Wrong!";
+    }
+    this.type = 43;
+    let bw = new Serializers();
+    bw.writeString(entity.heterogeneousAddress);
     this.txData = bw.getBufWriter().toBuffer();
   },
 
   /**
-   * 注销节点交易
-   * @param agentHash
-   * @constructor
+   * @disc: 创建交易对
+   * @params:
+   * @date: 2020-08-20 12:00
+   * @author: Wave
    */
-  StopAgentTransaction: function (agentHash, lockTime) {
+  CoinTradingTransaction: function (coinTrading) {
     Transaction.call(this);
-    if (!agentHash) {
-      throw "Data wrong!";
-    }
-    this.type = 9;
-    this.time = lockTime;
-    this.txData = Buffer.from(agentHash, 'hex');
+    this.type = 228;
+    let bw = new Serializers();
+    bw.getBufWriter().writeUInt16LE(coinTrading.baseAssetChainId);
+    bw.getBufWriter().writeUInt16LE(coinTrading.baseAssetId);
+    bw.getBufWriter().writeUInt8(coinTrading.baseMinDecimal);
+    bw.writeBigInt(coinTrading.baseMinSize);
+
+    bw.getBufWriter().writeUInt16LE(coinTrading.quoteAssetChainId);
+    bw.getBufWriter().writeUInt16LE(coinTrading.quoteAssetId);
+    bw.getBufWriter().writeUInt8(coinTrading.quoteMinDecimal);
+    bw.writeBigInt(coinTrading.quoteMinSize);
+
+    this.txData = bw.getBufWriter().toBuffer();
+  },
+
+  //dex 交易对添加委托
+  TradingOrderTransaction: function (tradingOrder) {
+    Transaction.call(this);
+    this.type = 229;
+    let bw = new Serializers();
+    let hash = Buffer.from(tradingOrder.tradingHash, 'hex');
+    bw.getBufWriter().write(hash);
+    bw.getBufWriter().write(sdk.getBytesAddress(tradingOrder.address));
+    bw.getBufWriter().writeUInt8(tradingOrder.orderType);
+    bw.writeBigInt(tradingOrder.amount);
+    bw.writeBigInt(tradingOrder.price);
+    bw.writeBytesWithLength(sdk.getBytesAddress(tradingOrder.feeAddress));
+    bw.getBufWriter().writeUInt8(tradingOrder.feeScale);
+    this.txData = bw.getBufWriter().toBuffer();
+  },
+
+  //dex 交易对撤销委托
+  CancelTradingOrderTransaction: function (tradingOrder) {
+    Transaction.call(this);
+    this.type = 230;
+    let bw = new Serializers();
+    let hash = Buffer.from(tradingOrder.orderHash, 'hex');
+    bw.getBufWriter().write(hash);
+    this.txData = bw.getBufWriter().toBuffer();
   },
 
 };
